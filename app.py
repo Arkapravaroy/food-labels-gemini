@@ -37,7 +37,7 @@ async def index(request: Request):
 
 
 @app.post("/upload")
-async def upload_file(image: UploadFile = Form(...), ageGroup: str = Form(...), gender: str = Form(...)):
+async def upload_file(request: Request, image: UploadFile = Form(...), ageGroup: str = Form(...), gender: str = Form(...)):
     
     contents   = await image.read()
     image_data = BytesIO(contents)
@@ -66,7 +66,12 @@ async def upload_file(image: UploadFile = Form(...), ageGroup: str = Form(...), 
 
         print(f"Response from the model: {response}")
 
+    # return JSONResponse({"status":200, "response": response})
     return JSONResponse({"status":200, "response": response})
+
+# @app.post("/get_response", response_class=HTMLResponse)
+# async def upload_response(request: Request):
+    
 
 
 if __name__ == "__main__":

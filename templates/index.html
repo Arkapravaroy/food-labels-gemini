@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -76,28 +77,31 @@
         function submitForm() {
             const form = document.getElementById('uploadForm');
             const formData = new FormData(form);
-
+        
             fetch('/upload', {
                 method: 'POST',
                 body: formData
             })
-            .then(response => response.json())
+            .then(response => {
+                console.log('Server Response:', response);
+                return response.json();
+            })
             .then(data => {
+                console.log('Data Received:', data);
                 const responseDiv = document.getElementById('response');
-                if (data.status === 200) {
-                    const response = JSON.parse(data.response);
-                    // Do whatever you want with the 'response' variable here
-                responseDiv.innerHTML = `<p>Response: ${JSON.stringify(response)}</p>`;
-            } else {
-            // Handle other status codes if needed
-            // For example, display an error message
-            responseDiv.innerHTML = `<p>Error: ${data.message}</p>`;
+                if (data.status === 200 && data.response) {
+                    // Assuming data.response is already a JSON object
+                    responseDiv.innerHTML = `<pre>Response: ${JSON.stringify(data.response, null, 2)}</pre>`;
+                } else {
+                    responseDiv.innerHTML = `<p>Error: ${data.message}</p>`;
                 }
             })
             .catch(error => {
-                console.error('Error:', error);
+                console.error('Fetch Error:', error);
             });
         }
+        
     </script>
 </body>
 </html>
+
