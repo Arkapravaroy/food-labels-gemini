@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -9,32 +8,37 @@
         body {
             font-family: Arial, sans-serif;
             background-color: #f4f4f4;
-            margin: 0;
-            padding: 0;
+            margin: 10;
+            padding: 10;
             display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
+            justify-content: flex-start;
+            align-items: center; /* Aligns the container at the center */
+            height: 100vh; /* Adjusts the height to fit the viewport */
         }
         .container {
-            width: 400px;
-            padding: 20px;
+            width: 100%; /* Adjusts the width to fit the viewport */
+            padding: 10px; /* Adds some padding */
             background-color: #fff;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 4px;
+            box-shadow: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start; /* Aligns the content at the top */
+            height: 100%; /* Adjusts the height to fit the container */
         }
         h1 {
             text-align: center;
         }
         label {
             display: block;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
         }
         select, input[type="file"], button {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 20px;
-            border: 1px solid #ccc;
+            width: 200%;
+            padding: 5px;
+            margin-bottom: 5px;
+            border: 2px solid #ccc;
             border-radius: 4px;
             box-sizing: border-box;
         }
@@ -46,6 +50,28 @@
         }
         button:hover {
             background-color: #45a049;
+        }
+        #response {
+            height: 200px;
+            overflow-y: scroll;
+            border: 1px solid #ccc;
+            padding: 5px;
+            margin-top: 10px;
+            white-space: pre-wrap;
+            width: 60%; /* Reduces the width of the response div */
+            display: none; /* Hides the response div initially */
+        }
+        #imagePreview {
+            width: 40%; /* Reduces the width of the image preview */
+            height: 200px;
+            object-fit: contain;
+            margin-left: 0px; /* Adds a margin to the left of the image preview */
+            display: none; /* Hides the image preview initially */
+        }
+        .response-container {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
         }
     </style>
 </head>
@@ -70,14 +96,21 @@
             <input type="file" id="image" name="image">
             <button type="button" onclick="submitForm()">Submit</button>
         </form>
-        <div id="response"></div>
+        <div class="response-container">
+            <div id="response">Awaiting response...</div> <!-- Shows "Awaiting response..." initially -->
+            <img id="imagePreview">
+        </div>
     </div>
-
     <script>
         function submitForm() {
             const form = document.getElementById('uploadForm');
             const formData = new FormData(form);
-        
+            const responseDiv = document.getElementById('response');
+            const imagePreview = document.getElementById('imagePreview');
+            
+            responseDiv.innerHTML = 'Awaiting response...'; // Shows "Awaiting response..." when the button is pressed
+            responseDiv.style.display = 'block'; // Makes the response div visible
+
             fetch('/upload', {
                 method: 'POST',
                 body: formData
@@ -88,20 +121,19 @@
             })
             .then(data => {
                 console.log('Data Received:', data);
-                const responseDiv = document.getElementById('response');
                 if (data.status === 200 && data.response) {
-                    // Assuming data.response is already a JSON object
-                    responseDiv.innerHTML = `<pre>Response: ${JSON.stringify(data.response, null, 2)}</pre>`;
+                    let formattedResponse = data.response.replace(/\\n/g, '<br/>').replace(/:\*\*(.*?)\*\*/g, '<strong>$1</strong>\n').replace(/\*\*/g, ' ');
+                    responseDiv.innerHTML = `<h2>Response:</h2>${formattedResponse}`;
+                    imagePreview.src = URL.createObjectURL(form.image.files[0]);
+                    imagePreview.style.display = 'block';
                 } else {
-                    responseDiv.innerHTML = `<p>Error: ${data.message}</p>`;
+                    responseDiv.innerHTML = `<h2>Error:</h2><p>${data.message}</p>`;
                 }
             })
             .catch(error => {
                 console.error('Fetch Error:', error);
             });
         }
-        
     </script>
 </body>
 </html>
-

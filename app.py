@@ -43,7 +43,7 @@ async def upload_file(request: Request, image: UploadFile = Form(...), ageGroup:
     image_data = BytesIO(contents)
     img        = Image.open(image_data)
     rgb_image  = img.convert("RGB")
-    img.show()
+    # img.show()
 
     image_array = np.array(rgb_image)
 
