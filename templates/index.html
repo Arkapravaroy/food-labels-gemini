@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.5.3/jspdf.debug.js"></script>
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Image Upload</title>
@@ -12,7 +14,7 @@
             padding: 10;
             display: flex;
             justify-content: flex-start;
-            align-items: center; /* Aligns the container at the center */
+            align-items: left; /* Aligns the container at the center */
             height: 100vh; /* Adjusts the height to fit the viewport */
         }
         .container {
@@ -23,7 +25,7 @@
             box-shadow: none;
             display: flex;
             flex-direction: column;
-            align-items: center;
+            align-items: left;
             justify-content: flex-start; /* Aligns the content at the top */
             height: 100%; /* Adjusts the height to fit the container */
         }
@@ -35,7 +37,7 @@
             margin-bottom: 10px;
         }
         select, input[type="file"], button {
-            width: 200%;
+            width: 100%;
             padding: 5px;
             margin-bottom: 5px;
             border: 2px solid #ccc;
@@ -52,7 +54,7 @@
             background-color: #45a049;
         }
         #response {
-            height: 200px;
+            height: 300px;
             overflow-y: scroll;
             border: 1px solid #ccc;
             padding: 5px;
@@ -63,7 +65,7 @@
         }
         #imagePreview {
             width: 40%; /* Reduces the width of the image preview */
-            height: 200px;
+            height: 300px;
             object-fit: contain;
             margin-left: 0px; /* Adds a margin to the left of the image preview */
             display: none; /* Hides the image preview initially */
@@ -101,6 +103,9 @@
             <img id="imagePreview">
         </div>
     </div>
+    <div id="downloadContainer">
+        <button id="download" type="button" style="display: none;">Download PDF</button>
+    </div>
     <script>
         function submitForm() {
             const form = document.getElementById('uploadForm');
@@ -133,7 +138,65 @@
             .catch(error => {
                 console.error('Fetch Error:', error);
             });
+            imagePreview.onload = function() {
+                document.getElementById('download').style.display = 'block';
+            }
         }
+        document.getElementById('download').addEventListener('click', function() {
+            var pdf = new jsPDF('p', 'mm', 'a4');
+            html2canvas(document.querySelector('#response'), {
+                scrollY: -window.scrollY,
+                scrollX: 0,
+                windowHeight: document.querySelector('#response').scrollHeight // Capture full height of response div
+            }).then(canvas =>  {
+                var imgData = canvas.toDataURL('image/png');
+                var imgWidth = 210; // image width in mm (A4 size)
+                var pageHeight = 295;  // page height in mm (A4 size)
+                var imgHeight = canvas.height// * imgWidth / canvas.width;
+                var heightLeft = imgHeight;
+                var position = 0;
+    
+                pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                heightLeft -= pageHeight;
+    
+                while (heightLeft >= 0) {
+                    position = heightLeft - imgHeight;
+                    pdf.addPage();
+                    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                    heightLeft -= pageHeight;
+                }
+                html2canvas(document.querySelector('#imagePreview'), { // Capture the image preview
+                    scrollY: -window.scrollY,
+                    scrollX: 0,
+                    windowWidth: document.documentElement.offsetWidth,
+                    windowHeight: document.documentElement.offsetHeight
+                }).then(canvas => {
+                    imgData = canvas.toDataURL('image/png');
+                    imgHeight = canvas.height //* imgWidth / canvas.width;
+                    heightLeft = imgHeight;
+                    position = 0;
+            
+                    pdf.addPage();
+                    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                    heightLeft -= pageHeight;
+            
+                    while (heightLeft >= 0) {
+                        position = heightLeft - imgHeight;
+                        pdf.addPage();
+                        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                        heightLeft -= pageHeight;
+                    }
+                    pdf.save('download.pdf');
+                });
+            });
+        });
     </script>
+    <style>
+        #downloadContainer {
+            display: bottom;
+            justify-content: center;
+            margin-top: 20px;
+        }
+    </style>
 </body>
 </html>
